@@ -72,33 +72,23 @@ labels = [line.strip() for line in open("labels.txt")]
 def preprocess(img):
     img = cv2.resize(img, (224, 224))
 
-    img = cv2.GaussianBlur(img, (3, 3), 0)  # reduce noise
-
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
     img = img.astype(np.float32)
-
-    # normalize properly
-    img = img / 255.0
+    img = (img / 127.5) - 1.0
 
     return img
 
+
 # -------------------------------
 def predict_image(img):
-    predictions = []
+    img = preprocess(img)
+    img = np.expand_dims(img, axis=0)
 
-    for _ in range(3):  # run model 3 times
-        processed = preprocess(img)
-        processed = np.expand_dims(processed, axis=0)
-
-        pred = model(processed, training=False).numpy()[0]
-        predictions.append(pred)
-
-    final_pred = np.mean(predictions, axis=0)
-
-    class_id = np.argmax(final_pred)
-    confidence = float(np.max(final_pred)) * 100
+    pred = model(img, training=False).numpy()[0]
+    class_id = np.argmax(pred)
+    confidence = float(np.max(pred)) * 100
 
     return labels[class_id], confidence
 
