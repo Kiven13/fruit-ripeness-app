@@ -90,7 +90,11 @@ def predict_image(img):
 
 # -------------------------------
 def parse_label(label):
-    label = label.lower()
+    label = label.lower().strip()
+
+    # REMOVE numbers and symbols completely
+    label = ''.join([c for c in label if c.isalpha() or c.isspace()])
+
     ripeness = "Unknown"
 
     if "overripe" in label:
@@ -100,7 +104,10 @@ def parse_label(label):
     elif "ripe" in label:
         ripeness = "Ripe"
 
-    fruit = label.replace("overripe", "").replace("unripe", "").replace("ripe", "")
+    fruit = label
+    for word in ["overripe", "unripe", "ripe"]:
+        fruit = fruit.replace(word, "")
+
     fruit = fruit.strip().title()
 
     return fruit, ripeness
