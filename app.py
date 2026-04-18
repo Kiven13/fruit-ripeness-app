@@ -70,12 +70,36 @@ labels = [line.strip() for line in open("labels.txt")]
 # PREPROCESS
 # -------------------------------
 def preprocess(img):
+    # 1. Resize
     img = cv2.resize(img, (224, 224))
 
+    # 2. Ensure RGB
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
+    # 3. Convert to float
     img = img.astype(np.float32)
+
+    # -------------------------------
+    # 4. Lighting normalization (CLAHE)
+    # -------------------------------
+    lab = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_RGB2LAB)
+    l, a, b = cv2.split(lab)
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    l = clahe.apply(l)
+
+    lab = cv2.merge((l, a, b))
+    img = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+
+    # -------------------------------
+    # 5. Mild denoising (stabilizes camera noise)
+    # -------------------------------
+    img = cv2.GaussianBlur(img, (3, 3), 0)
+
+    # -------------------------------
+    # 6. Normalize (match MobileNet / TM style)
+    # -------------------------------
     img = (img / 127.5) - 1.0
 
     return img
