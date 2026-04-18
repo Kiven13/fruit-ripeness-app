@@ -113,12 +113,41 @@ def parse_label(label):
     return fruit, ripeness
 
 # -------------------------------
-def get_recommendation(ripeness):
-    return {
-        "Ripe": "Ready to eat",
-        "Unripe": "Wait 2–3 days",
-        "Overripe": "Consume quickly or discard"
-    }.get(ripeness, "Unknown condition")
+def get_recommendation(fruit, ripeness):
+    fruit = fruit.lower()
+
+    recommendations = {
+        "banana": {
+            "Unripe": "Keep at room temperature until yellow",
+            "Ripe": "Best for eating or smoothies",
+            "Overripe": "Perfect for banana bread or baking"
+        },
+        "apple": {
+            "Unripe": "Store at room temperature to ripen",
+            "Ripe": "Best for fresh eating",
+            "Overripe": "Use for juice or cooking"
+        },
+        "mango": {
+            "Unripe": "Leave for 2–3 days until soft",
+            "Ripe": "Sweet and ready to eat",
+            "Overripe": "Use for shakes or desserts"
+        }
+    }
+
+    storage_advice = {
+        "Ripe": "Store in refrigerator to slow ripening",
+        "Unripe": "Keep at room temperature",
+        "Overripe": "Use immediately or freeze"
+    }
+
+    main_recommendation = recommendations.get(fruit, {}).get(
+        ripeness,
+        "No specific recommendation available"
+    )
+
+    storage = storage_advice.get(ripeness, "")
+
+    return main_recommendation, storage
 
 # -------------------------------
 def save_log(fruit, ripeness, confidence):
@@ -230,6 +259,9 @@ elif mode == "Camera":
 
             st.progress(int(confidence))
 
-            st.info(get_recommendation(ripeness))
+            recommendation, storage = get_recommendation(fruit, ripeness)
+
+            st.info(f"💡 {recommendation}")
+            st.warning(f"🧊 Storage: {storage}")
 
         save_log(fruit, ripeness, confidence)
