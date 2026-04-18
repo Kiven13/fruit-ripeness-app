@@ -5,79 +5,9 @@ import pandas as pd
 from PIL import Image
 from datetime import datetime
 from keras.models import load_model
-import time
 
 # -------------------------------
-# PAGE CONFIG
-# -------------------------------
-st.set_page_config(
-    page_title="Fruit Ripeness AI",
-    page_icon="🍎",
-    layout="centered"
-)
-
-# -------------------------------
-# GLASSMORPHISM UI STYLE
-# -------------------------------
-st.markdown("""
-<style>
-
-body {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-}
-
-.title {
-    text-align: center;
-    font-size: 38px;
-    font-weight: 700;
-    color: #4ade80;
-}
-
-.subtitle {
-    text-align: center;
-    color: #cbd5e1;
-    margin-bottom: 20px;
-}
-
-/* Glass card */
-.glass {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    padding: 20px;
-    margin-top: 15px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Animated bar */
-.bar-container {
-    height: 18px;
-    width: 100%;
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #22c55e, #86efac);
-    width: 0%;
-    transition: width 1s ease-in-out;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# -------------------------------
-# HEADER
-# -------------------------------
-st.markdown('<div class="title">🍎 Smart Fruit AI</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Upload or capture an image for detection</div>', unsafe_allow_html=True)
-
-# -------------------------------
-# LOAD MODEL
+# LOAD MODEL (CACHED)
 # -------------------------------
 @st.cache_resource
 def load_my_model():
@@ -88,33 +18,66 @@ model = load_my_model()
 labels = [line.strip() for line in open("labels.txt")]
 
 # -------------------------------
-# PREPROCESS
+# PAGE CONFIG
+# -------------------------------
+st.set_page_config(page_title="Fruit Ripeness Detection", layout="centered")
+
+st.title("Smart Multi-Fruit Ripeness Detection System")
+st.write("Upload an image or use your camera to detect fruit type and ripeness.")
+
+# -------------------------------
+# PREPROCESSING
 # -------------------------------
 def preprocess(img):
     img = cv2.resize(img, (224, 224))
+
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
     img = img.astype(np.float32)
-    return (img / 127.5) - 1.0
+    img = (img / 127.5) - 1.0
+
+    return img
 
 # -------------------------------
-# PREDICT
+# TEST-TIME AUGMENTATION (TTA)
+# -------------------------------
+def augment_image(img):
+    return [
+        img,
+        cv2.convertScaleAbs(img, alpha=1.1, beta=5),
+        cv2.convertScaleAbs(img, alpha=0.9, beta=-5),
+        cv2.GaussianBlur(img, (3, 3), 0)
+    ]
+
+# -------------------------------
+# PREDICTION
 # -------------------------------
 def predict_image(img):
-    img = preprocess(img)
-    img = np.expand_dims(img, axis=0)
-    pred = model(img, training=False).numpy()[0]
+    augmented = augment_image(img)
+    predictions = []
 
-    class_id = np.argmax(pred)
-    confidence = float(np.max(pred)) * 100
+    for im in augmented:
+        processed = preprocess(im)
+        processed = np.expand_dims(processed, axis=0)
+
+        pred = model(processed, training=False).numpy()[0]
+        predictions.append(pred)
+
+    final_pred = np.mean(predictions, axis=0)
+
+    class_id = np.argmax(final_pred)
+    confidence = float(np.max(final_pred)) * 100
 
     return labels[class_id], confidence
 
 # -------------------------------
-# PARSE LABEL
+# PARSE LABEL (FIXED)
 # -------------------------------
 def parse_label(label):
     label = label.lower()
+
+    ripeness = "Unknown"
 
     if "overripe" in label:
         ripeness = "Overripe"
@@ -122,34 +85,44 @@ def parse_label(label):
         ripeness = "Unripe"
     elif "ripe" in label:
         ripeness = "Ripe"
-    else:
-        ripeness = "Unknown"
 
-    fruit = label.replace("overripe", "").replace("unripe", "").replace("ripe", "")
+    fruit = label
+    for word in ["overripe", "unripe", "ripe"]:
+        fruit = fruit.replace(word, "")
+
+    parts = fruit.split(" ", 1)
+    if parts[0].isdigit() and len(parts) > 1:
+        fruit = parts[1]
+
     fruit = fruit.strip().title()
 
     return fruit, ripeness
 
 # -------------------------------
-# RECOMMENDATION
+# RECOMMENDATION SYSTEM
 # -------------------------------
 def get_recommendation(ripeness):
-    return {
-        "Ripe": "🍽 Ready to eat",
-        "Unripe": "⏳ Wait 2–3 days",
-        "Overripe": "⚠ Consume quickly or discard"
-    }.get(ripeness, "❓ Unknown")
+    if ripeness == "Ripe":
+        return "Ready to eat"
+    elif ripeness == "Unripe":
+        return "Wait 2–3 days"
+    elif ripeness == "Overripe":
+        return "Consume quickly or discard"
+    else:
+        return "Unknown condition"
 
 # -------------------------------
-# LOGGING
+# SAVE LOGS
 # -------------------------------
 def save_log(fruit, ripeness, confidence):
-    df = pd.DataFrame({
+    data = {
         "time": [datetime.now()],
         "fruit": [fruit],
         "ripeness": [ripeness],
         "confidence": [confidence]
-    })
+    }
+
+    df = pd.DataFrame(data)
 
     try:
         old = pd.read_csv("logs.csv")
@@ -162,97 +135,74 @@ def save_log(fruit, ripeness, confidence):
 # -------------------------------
 # SIDEBAR
 # -------------------------------
-mode = st.sidebar.radio("📌 Mode", ["📤 Upload Image", "📷 Camera", "📊 Analytics"])
+mode = st.sidebar.radio("Choose Mode", ["Upload Image", "Use Camera", "Analytics"])
 
 # -------------------------------
-# UPLOAD MODE
+# ANALYTICS PAGE
 # -------------------------------
-if mode == "📤 Upload Image":
+if mode == "Analytics":
+    st.subheader("Prediction History")
 
+    try:
+        df = pd.read_csv("logs.csv")
+        st.dataframe(df)
+
+        st.subheader("Distribution")
+        st.bar_chart(df["ripeness"].value_counts())
+
+    except:
+        st.warning("No data yet. Run predictions first.")
+
+# -------------------------------
+# IMAGE MODE
+# -------------------------------
+elif mode == "Upload Image":
     file = st.file_uploader("Upload Fruit Image", type=["jpg", "png", "jpeg"])
 
     if file:
         image = Image.open(file)
-        st.image(image, use_container_width=True)
+        st.image(image, caption="Uploaded Image", width=300)
 
         img = np.array(image.convert("RGB"))
+
         label, confidence = predict_image(img)
         fruit, ripeness = parse_label(label)
 
-        # ---------------- CARD UI ----------------
-        st.markdown('<div class="glass">', unsafe_allow_html=True)
+        if confidence < 75:
+            st.error("Low confidence. Try better lighting or angle.")
+        else:
+            st.success(f"Fruit: {fruit}")
+            st.info(f"Ripeness: {ripeness}")
+            st.info(f"Confidence: {confidence:.2f}%")
 
-        st.subheader("🔍 Prediction Result")
-        st.write(f"🍎 Fruit: **{fruit}**")
-        st.write(f"🍃 Ripeness: **{ripeness}**")
-        st.write(f"🎯 Confidence: **{confidence:.2f}%**")
+            st.progress(int(confidence))
+            st.warning(get_recommendation(ripeness))
 
-        # ---------------- ANIMATED BAR ----------------
-        st.subheader("📊 Confidence Meter")
-        bar = st.empty()
-        label_box = st.empty()
-
-        for i in range(int(confidence)):
-            time.sleep(0.005)
-            bar.progress(i + 1)
-            label_box.markdown(f"**{i+1}% Confidence** 🔍")
-
-        st.success(get_recommendation(ripeness))
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        save_log(fruit, ripeness, confidence)
+            save_log(fruit, ripeness, confidence)
 
 # -------------------------------
 # CAMERA MODE
 # -------------------------------
-elif mode == "📷 Camera":
-
-    img_file = st.camera_input("Capture Image")
+elif mode == "Use Camera":
+    img_file = st.camera_input("Take a picture")
 
     if img_file:
         image = Image.open(img_file)
-        st.image(image, use_container_width=True)
+        st.image(image, caption="Captured Image", width=300)
 
         img = np.array(image.convert("RGB"))
+
         label, confidence = predict_image(img)
         fruit, ripeness = parse_label(label)
 
-        st.markdown('<div class="glass">', unsafe_allow_html=True)
+        if confidence < 75:
+            st.error("Low confidence. Try again with better lighting.")
+        else:
+            st.success(f"Fruit: {fruit}")
+            st.info(f"Ripeness: {ripeness}")
+            st.info(f"Confidence: {confidence:.2f}%")
 
-        st.subheader("🔍 Prediction Result")
-        st.write(f"🍎 Fruit: **{fruit}**")
-        st.write(f"🍃 Ripeness: **{ripeness}**")
-        st.write(f"🎯 Confidence: **{confidence:.2f}%**")
+            st.progress(int(confidence))
+            st.warning(get_recommendation(ripeness))
 
-        st.subheader("📊 Confidence Meter")
-        bar = st.empty()
-        label_box = st.empty()
-
-        for i in range(int(confidence)):
-            time.sleep(0.005)
-            bar.progress(i + 1)
-            label_box.markdown(f"**{i+1}% Confidence** 🔍")
-
-        st.success(get_recommendation(ripeness))
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        save_log(fruit, ripeness, confidence)
-
-# -------------------------------
-# ANALYTICS
-# -------------------------------
-elif mode == "📊 Analytics":
-
-    st.subheader("📊 Prediction History")
-
-    try:
-        df = pd.read_csv("logs.csv")
-        st.dataframe(df, use_container_width=True)
-
-        st.subheader("📈 Ripeness Distribution")
-        st.bar_chart(df["ripeness"].value_counts())
-
-    except:
-        st.warning("No data yet.")
+            save_log(fruit, ripeness, confidence)
