@@ -226,7 +226,10 @@ elif mode == "Upload Image":
 
             st.progress(int(confidence))
 
-            st.info(f"💡 Recommendation: {get_recommendation(ripeness)}")
+            recommendation, storage = get_recommendation(fruit, ripeness)
+
+            st.info(f"💡 {recommendation}")
+            st.warning(f"🧊 Storage: {storage}")
 
         save_log(fruit, ripeness, confidence)
 
