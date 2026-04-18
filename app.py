@@ -219,9 +219,9 @@ elif mode == "Upload Image":
         with col2:
             st.markdown("### 🧠 Prediction Result")
 
-            if confidence < 70:
+            if confidence < 75:
                 st.error("❌ Low confidence - prediction may be unreliable")
-            elif confidence < 90:
+            elif confidence < 95:
                 st.warning("⚠️ Medium confidence - be careful")
             else:
                 st.success("✅ High confidence prediction")
