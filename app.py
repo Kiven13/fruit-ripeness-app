@@ -71,20 +71,34 @@ labels = [line.strip() for line in open("labels.txt")]
 # -------------------------------
 def preprocess(img):
     img = cv2.resize(img, (224, 224))
+
+    img = cv2.GaussianBlur(img, (3, 3), 0)  # reduce noise
+
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
     img = img.astype(np.float32)
-    img = (img / 127.5) - 1.0
+
+    # normalize properly
+    img = img / 255.0
+
     return img
 
 # -------------------------------
 def predict_image(img):
-    img = preprocess(img)
-    img = np.expand_dims(img, axis=0)
+    predictions = []
 
-    pred = model(img, training=False).numpy()[0]
-    class_id = np.argmax(pred)
-    confidence = float(np.max(pred)) * 100
+    for _ in range(3):  # run model 3 times
+        processed = preprocess(img)
+        processed = np.expand_dims(processed, axis=0)
+
+        pred = model(processed, training=False).numpy()[0]
+        predictions.append(pred)
+
+    final_pred = np.mean(predictions, axis=0)
+
+    class_id = np.argmax(final_pred)
+    confidence = float(np.max(final_pred)) * 100
 
     return labels[class_id], confidence
 
@@ -215,10 +229,12 @@ elif mode == "Upload Image":
         with col2:
             st.markdown("### 🧠 Prediction Result")
 
-            if confidence < 75:
-                st.error("Low confidence prediction")
+            if confidence < 60:
+                st.error("❌ Low confidence - prediction may be unreliable")
+            elif confidence < 80:
+                st.warning("⚠️ Medium confidence - be careful")
             else:
-                st.success("High confidence prediction")
+                st.success("✅ High confidence prediction")
 
             st.metric("Fruit", fruit)
             st.metric("Ripeness", ripeness)
