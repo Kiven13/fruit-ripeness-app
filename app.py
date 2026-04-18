@@ -159,6 +159,16 @@ def get_recommendation(fruit, ripeness):
             "Unripe": "Leave for 2–3 days until soft",
             "Ripe": "Sweet and ready to eat",
             "Overripe": "Use for shakes or desserts"
+        },
+        "orange": {
+            "Unripe": "Let it sit at room temperature until fully orange and slightly soft",
+            "Ripe": "Best for eating or fresh juice",
+            "Overripe": "Use for juice immediately or smoothies"
+        },
+        "tomato": {
+            "Unripe": "Keep at room temperature away from sunlight until it turns red",
+            "Ripe": "Best for salads, cooking, or fresh eating",
+            "Overripe": "Use for sauces, soups, or cooking"
         }
     }
 
