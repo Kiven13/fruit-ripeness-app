@@ -245,13 +245,18 @@ elif mode == "Upload Image":
         with col2:
 
             st.markdown("### 🔍 Prediction")
-            st.write(f"Fruit: **{fruit}**")
-            st.write(f"Ripeness: **{ripeness}**")
+            st.write(f" Fruit: **{fruit}**")
+            st.write(f" Ripeness: **{ripeness}**")
 
             color = (
                 "lightgreen" if confidence > 90 else
                 "orange" if confidence > 75 else
                 "red"
+            )
+
+            st.markdown(
+                f"**Confidence:** <span style='color:{color}'>{confidence:.2f}%</span>",
+                unsafe_allow_html=True
             )
 
             # Animated confidence bar
@@ -294,8 +299,9 @@ elif mode == "Camera":
         with col2:
 
             st.markdown("### 🔍 Prediction")
-            st.write(f"Fruit: **{fruit}**")
-            st.write(f"Ripeness: **{ripeness}**")
+            st.write(f" Fruit: **{fruit}**")
+            st.write(f" Ripeness: **{ripeness}**")
+            st.write(f" Confidence: {confidence:.2f}%")
 
             # Animated confidence bar
             bar = st.empty()
