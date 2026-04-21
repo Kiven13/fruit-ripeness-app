@@ -243,7 +243,6 @@ elif mode == "Upload Image":
         fruit, ripeness = parse_label(label)
 
         with col2:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
 
             st.markdown("### 🔍 Prediction")
             st.write(f"Fruit: **{fruit}**")
@@ -298,7 +297,6 @@ elif mode == "Camera":
         fruit, ripeness = parse_label(label)
 
         with col2:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
 
             st.markdown("### 🔍 Prediction")
             st.write(f"🍎 Fruit: **{fruit}**")
