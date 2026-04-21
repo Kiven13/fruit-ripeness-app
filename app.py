@@ -254,11 +254,6 @@ elif mode == "Upload Image":
                 "red"
             )
 
-            st.markdown(
-                f"**Confidence:** <span style='color:{color}'>{confidence:.2f}%</span>",
-                unsafe_allow_html=True
-            )
-
             # Animated confidence bar
             bar = st.empty()
             text = st.empty()
@@ -299,9 +294,8 @@ elif mode == "Camera":
         with col2:
 
             st.markdown("### 🔍 Prediction")
-            st.write(f"🍎 Fruit: **{fruit}**")
-            st.write(f"🍃 Ripeness: **{ripeness}**")
-            st.write(f"🎯 Confidence: {confidence:.2f}%")
+            st.write(f"Fruit: **{fruit}**")
+            st.write(f"Ripeness: **{ripeness}**")
 
             # Animated confidence bar
             bar = st.empty()
