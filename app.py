@@ -17,25 +17,36 @@ st.set_page_config(
 )
 
 # -------------------------------
-# CLEAN UI CSS (MINIMAL)
+# GLASSMORPHISM UI
 # -------------------------------
 st.markdown("""
 <style>
 .main {
-    background-color: #f5f7fb;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
 }
 
 .title {
     text-align: center;
-    font-size: 36px;
+    font-size: 38px;
     font-weight: 900;
-    color: #1f2d3d;
+    color: #4ade80;
 }
 
 .subtitle {
     text-align: center;
-    color: #6c7a89;
+    color: #cbd5e1;
     margin-bottom: 25px;
+}
+
+/* Glass Card */
+.card {
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 18px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0px 8px 30px rgba(0,0,0,0.3);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -67,6 +78,7 @@ def preprocess(img):
 
     img = img.astype(np.uint8)
 
+    # CLAHE (lighting correction)
     lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
     l, a, b = cv2.split(lab)
 
@@ -76,8 +88,10 @@ def preprocess(img):
     lab = cv2.merge((l, a, b))
     img = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
 
+    # Denoise
     img = cv2.GaussianBlur(img, (3, 3), 0)
 
+    # Normalize
     img = img.astype(np.float32)
     img = (img / 127.5) - 1.0
 
@@ -98,7 +112,7 @@ def predict_image(img):
     return labels[class_id], confidence
 
 # -------------------------------
-# PARSE LABEL (KEEPING FRESH)
+# PARSE LABEL (FIXED FOR FRESH)
 # -------------------------------
 def parse_label(label):
     label = label.lower()
@@ -130,32 +144,38 @@ def get_recommendation(fruit, ripeness):
         "banana": {
             "Unripe": "Keep at room temperature until yellow",
             "Fresh": "Best for eating or smoothies",
+            "Ripe": "Best for eating or smoothies",
             "Overripe": "Perfect for baking"
         },
         "apple": {
             "Unripe": "Let it ripen at room temperature",
             "Fresh": "Best for fresh eating",
+            "Ripe": "Best for fresh eating",
             "Overripe": "Use for juice or cooking"
         },
         "mango": {
             "Unripe": "Wait 2–3 days until soft",
             "Fresh": "Sweet and ready to eat",
+            "Ripe": "Sweet and ready to eat",
             "Overripe": "Good for shakes"
         },
         "orange": {
             "Unripe": "Let ripen until fully orange",
             "Fresh": "Best for juice or eating",
+            "Ripe": "Best for juice or eating",
             "Overripe": "Use immediately for juice"
         },
         "tomato": {
             "Unripe": "Keep until red and soft",
             "Fresh": "Best for salads",
+            "Ripe": "Best for salads",
             "Overripe": "Use for sauces"
         }
     }
 
     storage = {
         "Fresh": "Store in fridge",
+        "Ripe": "Store in fridge",
         "Unripe": "Keep at room temp",
         "Overripe": "Use immediately"
     }
@@ -223,29 +243,37 @@ elif mode == "Upload Image":
         fruit, ripeness = parse_label(label)
 
         with col2:
-            st.markdown("### Prediction")
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+
+            st.markdown("### 🔍 Prediction")
+            st.write(f"🍎 Fruit: **{fruit}**")
+            st.write(f"🍃 Ripeness: **{ripeness}**")
 
             color = (
-                "green" if confidence > 90 else
+                "lightgreen" if confidence > 90 else
                 "orange" if confidence > 75 else
                 "red"
             )
 
-            st.markdown(f"**Fruit:** {fruit}")
-            st.markdown(f"**Ripeness:** {ripeness}")
             st.markdown(
                 f"**Confidence:** <span style='color:{color}'>{confidence:.2f}%</span>",
                 unsafe_allow_html=True
             )
 
-            st.progress(int(confidence))
+            # Animated confidence bar
+            bar = st.empty()
+            text = st.empty()
 
-            st.divider()
+            for i in range(int(confidence)):
+                bar.progress(i + 1)
+                text.markdown(f"**Confidence: {i+1}% 🔍**")
 
             rec, storage = get_recommendation(fruit, ripeness)
 
-            st.info(rec)
+            st.success(rec)
             st.warning(storage)
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
         save_log(fruit, ripeness, confidence)
 
@@ -270,19 +298,26 @@ elif mode == "Camera":
         fruit, ripeness = parse_label(label)
 
         with col2:
-            st.markdown("### Prediction")
+            st.markdown('<div class="card">', unsafe_allow_html=True)
 
-            st.write("Fruit:", fruit)
-            st.write("Ripeness:", ripeness)
-            st.write(f"Confidence: {confidence:.2f}%")
+            st.markdown("### 🔍 Prediction")
+            st.write(f"🍎 Fruit: **{fruit}**")
+            st.write(f"🍃 Ripeness: **{ripeness}**")
+            st.write(f"🎯 Confidence: {confidence:.2f}%")
 
-            st.progress(int(confidence))
+            # Animated confidence bar
+            bar = st.empty()
+            text = st.empty()
 
-            st.divider()
+            for i in range(int(confidence)):
+                bar.progress(i + 1)
+                text.markdown(f"**Confidence: {i+1}% 🔍**")
 
             rec, storage = get_recommendation(fruit, ripeness)
 
-            st.info(rec)
+            st.success(rec)
             st.warning(storage)
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
         save_log(fruit, ripeness, confidence)
