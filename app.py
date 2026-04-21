@@ -19,34 +19,33 @@ st.set_page_config(
 # -------------------------------
 # GLASSMORPHISM UI
 # -------------------------------
+# -------------------------------
+# CUSTOM CSS (IMPROVED UI)
+# -------------------------------
 st.markdown("""
 <style>
 .main {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
+    background-color: #f5f7fb;
 }
 
 .title {
     text-align: center;
-    font-size: 38px;
+    font-size: 36px;
     font-weight: 900;
-    color: #4ade80;
+    color: #1f2d3d;
 }
 
 .subtitle {
     text-align: center;
-    color: #cbd5e1;
+    color: #6c7a89;
     margin-bottom: 25px;
 }
 
-/* Glass Card */
 .card {
-    background: rgba(255,255,255,0.08);
+    background: white;
     padding: 20px;
-    border-radius: 18px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0px 8px 30px rgba(0,0,0,0.3);
+    border-radius: 16px;
+    box-shadow: 0px 6px 25px rgba(0,0,0,0.08);
 }
 </style>
 """, unsafe_allow_html=True)
