@@ -21,10 +21,29 @@ st.set_page_config(
 # -------------------------------
 st.markdown("""
 <style>
-.main {
+
+/* FULL BACKGROUND */
+html, body, [class*="css"] {
+    background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+    color: white !important;
+}
+
+/* Remove white container backgrounds */
+section.main > div {
+    background-color: transparent !important;
+}
+
+/* Remove default Streamlit block background */
+[data-testid="stAppViewContainer"] {
     background: linear-gradient(135deg, #0f172a, #1e293b);
 }
 
+/* Remove white box around images */
+[data-testid="stImage"] {
+    background: transparent !important;
+}
+
+/* Title */
 .title {
     text-align: center;
     font-size: 38px;
@@ -32,22 +51,23 @@ st.markdown("""
     color: #4ade80;
 }
 
+/* Subtitle */
 .subtitle {
     text-align: center;
     color: #cbd5e1;
     margin-bottom: 25px;
 }
 
-/* Glass Card */
+/* Glass Card ONLY for results */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 20px;
     border-radius: 18px;
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.1);
     box-shadow: 0px 8px 30px rgba(0,0,0,0.3);
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -236,7 +256,7 @@ elif mode == "Upload Image":
         col1, col2 = st.columns(2)
 
         with col1:
-            st.image(image, use_container_width=True)
+            st.image(image, use_container_width=True, clamp=True)
 
         img = np.array(image.convert("RGB"))
         label, confidence = predict_image(img)
