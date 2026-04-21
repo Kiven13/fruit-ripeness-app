@@ -245,8 +245,8 @@ elif mode == "Upload Image":
         with col2:
 
             st.markdown("### 🔍 Prediction")
-            st.write(f" Fruit: **{fruit}**")
-            st.write(f" Ripeness: **{ripeness}**")
+            st.write(f"Fruit: **{fruit}**")
+            st.write(f"Ripeness: **{ripeness}**")
 
             color = (
                 "lightgreen" if confidence > 90 else
@@ -259,20 +259,13 @@ elif mode == "Upload Image":
                 unsafe_allow_html=True
             )
 
-            # Animated confidence bar
-            bar = st.empty()
-            text = st.empty()
-
-            for i in range(int(confidence)):
-                bar.progress(i + 1)
-                text.markdown(f"**Confidence: {i+1}% 🔍**")
+            # CLEAN PROGRESS BAR (NO ANIMATION)
+            st.progress(int(confidence))
 
             rec, storage = get_recommendation(fruit, ripeness)
 
             st.success(rec)
             st.warning(storage)
-
-            st.markdown('</div>', unsafe_allow_html=True)
 
         save_log(fruit, ripeness, confidence)
 
@@ -299,23 +292,16 @@ elif mode == "Camera":
         with col2:
 
             st.markdown("### 🔍 Prediction")
-            st.write(f" Fruit: **{fruit}**")
-            st.write(f" Ripeness: **{ripeness}**")
-            st.write(f" Confidence: {confidence:.2f}%")
+            st.write(f"Fruit: **{fruit}**")
+            st.write(f"Ripeness: **{ripeness}**")
+            st.write(f"Confidence: {confidence:.2f}%")
 
-            # Animated confidence bar
-            bar = st.empty()
-            text = st.empty()
-
-            for i in range(int(confidence)):
-                bar.progress(i + 1)
-                text.markdown(f"**Confidence: {i+1}% 🔍**")
+            # CLEAN PROGRESS BAR (NO ANIMATION)
+            st.progress(int(confidence))
 
             rec, storage = get_recommendation(fruit, ripeness)
 
             st.success(rec)
             st.warning(storage)
-
-            st.markdown('</div>', unsafe_allow_html=True)
 
         save_log(fruit, ripeness, confidence)
