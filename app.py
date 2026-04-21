@@ -246,8 +246,8 @@ elif mode == "Upload Image":
             st.markdown('<div class="card">', unsafe_allow_html=True)
 
             st.markdown("### 🔍 Prediction")
-            st.write(f"🍎 Fruit: **{fruit}**")
-            st.write(f"🍃 Ripeness: **{ripeness}**")
+            st.write(f"Fruit: **{fruit}**")
+            st.write(f"Ripeness: **{ripeness}**")
 
             color = (
                 "lightgreen" if confidence > 90 else
