@@ -1,0 +1,15 @@
+0 Unripe Apple
+1 Fresh Apple
+2 Overripe Apple
+3 Unripe Banana
+4 Fresh Banana
+5 Overripe Banana
+6 Unripe Mango
+7 Fresh Mango
+8 Overripe Mango
+9 Unripe Orange
+10 Fresh Orange
+11 Overripe Orange
+12 Unripe Tomato
+13 Fresh Tomato
+14 Overripe Tomato
